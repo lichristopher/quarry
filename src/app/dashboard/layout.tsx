@@ -12,7 +12,7 @@ import {
   FileText,
 } from 'lucide-react';
 import { useState } from 'react';
-
+import Image from 'next/image';
 export default function DashboardLayout({
   children,
 }: {
@@ -24,21 +24,26 @@ export default function DashboardLayout({
     <div className="flex h-screen overflow-hidden">
       {/* Sidebar */}
       <aside
-        className={`bg-blue-600 text-white ${
+        className={`bg-[#012636F7] text-white ${
           isSidebarOpen ? 'w-64' : 'w-16'
         } transition-all duration-300 flex flex-col`}
       >
         {/* Header */}
         <div className="flex items-center justify-between px-4 py-3">
           {isSidebarOpen && (
-            <h2 className="text-lg font-semibold">Renans Quarry</h2>
+            <Image
+              src="/logo.png"
+              alt="Renans Quarry"
+              width={200}
+              height={100}
+            />
           )}
-          <button
+          {/* <button
             onClick={() => setIsSidebarOpen(!isSidebarOpen)}
             className="p-1 rounded-lg hover:bg-gray-700"
           >
             <Menu className="h-6 w-6" />
-          </button>
+          </button> */}
         </div>
 
         {/* Navigation */}

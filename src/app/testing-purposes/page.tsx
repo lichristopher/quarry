@@ -39,7 +39,6 @@ interface Delivery {
   plate_number: string;
   time: string;
   quantity: number;
-  price: number;
   destination: string;
   payment_method: string;
   payment_status: string;
@@ -61,10 +60,7 @@ const deliverySchema = z.object({
   trucker_id: z.string().min(1, { message: 'Trucker is required' }),
   trucker_name: z.string().min(1, { message: 'Trucker name is required' }),
   plate_number: z.string().min(1, { message: 'Plate number is required' }),
-  quantity: z.number().refine((val) => val === 10 || val === 15, {
-    message: 'Quantity must be either 10 or 15',
-  }),
-  price: z.number().min(1, { message: 'Price is required' }),
+  quantity: z.number().min(1, { message: 'Quantity is required' }),
   destination: z.string().min(1, { message: 'Destination is required' }),
   payment_method: z.string().min(1, { message: 'Payment method is required' }),
   payment_status: z.string().min(1, { message: 'Payment status is required' }),
@@ -87,10 +83,9 @@ export default function TestingPage() {
       trucker_id: '',
       trucker_name: '',
       plate_number: '',
-      quantity: 10,
-      price: 0,
+      quantity: 0,
       destination: '',
-      payment_method: 'CASH',
+      payment_method: '',
       payment_status: 'PENDING',
     },
   });
@@ -125,7 +120,7 @@ export default function TestingPage() {
       let query = supabase
         .from('deliveries')
         .select('*')
-        .eq('payment_method', 'P.O.')
+        .eq('payment_method', 'CASH')
         .order('date', { ascending: true });
 
       if (selectedTrucker) {
@@ -182,6 +177,7 @@ export default function TestingPage() {
         const { data: newData, error: fetchError } = await supabase
           .from('deliveries')
           .select('*')
+          .eq('payment_method', 'CASH')
           .order('date', { ascending: false });
 
         if (fetchError) {
@@ -221,6 +217,7 @@ export default function TestingPage() {
       const { data: newData, error: fetchError } = await supabase
         .from('deliveries')
         .select('*')
+        .eq('payment_method', 'CASH')
         .order('date', { ascending: false });
 
       if (fetchError) {
@@ -240,7 +237,7 @@ export default function TestingPage() {
   return (
     <div className="p-6">
       <div className="flex justify-between items-center mb-6">
-        <h1 className="text-2xl font-bold">Purchase Order</h1>
+        <h1 className="text-2xl font-bold">Testing Purposes</h1>
         <div className="flex gap-4">
           <Select
             value={selectedTrucker || 'all'}
@@ -364,36 +361,10 @@ export default function TestingPage() {
                     render={({ field }) => (
                       <FormItem>
                         <FormLabel>Quantity</FormLabel>
-                        <Select
-                          onValueChange={(value) =>
-                            field.onChange(Number(value))
-                          }
-                          defaultValue={field.value.toString()}
-                        >
-                          <FormControl>
-                            <SelectTrigger>
-                              <SelectValue placeholder="Select quantity" />
-                            </SelectTrigger>
-                          </FormControl>
-                          <SelectContent>
-                            <SelectItem value="10">10</SelectItem>
-                            <SelectItem value="15">15</SelectItem>
-                          </SelectContent>
-                        </Select>
-                      </FormItem>
-                    )}
-                  />
-
-                  <FormField
-                    control={form.control}
-                    name="price"
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormLabel>Price</FormLabel>
                         <FormControl>
                           <Input
                             type="number"
-                            placeholder="Enter price"
+                            placeholder="Enter quantity"
                             {...field}
                             onChange={(e) =>
                               field.onChange(Number(e.target.value))
@@ -423,9 +394,20 @@ export default function TestingPage() {
                     render={({ field }) => (
                       <FormItem>
                         <FormLabel>Payment Method</FormLabel>
-                        <FormControl>
-                          <Input {...field} value="CASH" disabled readOnly />
-                        </FormControl>
+                        <Select
+                          onValueChange={field.onChange}
+                          defaultValue={field.value}
+                        >
+                          <FormControl>
+                            <SelectTrigger>
+                              <SelectValue placeholder="Select payment method" />
+                            </SelectTrigger>
+                          </FormControl>
+                          <SelectContent>
+                            <SelectItem value="CASH">Cash</SelectItem>
+                            <SelectItem value="P.O.">P.O.</SelectItem>
+                          </SelectContent>
+                        </Select>
                       </FormItem>
                     )}
                   />
@@ -475,9 +457,9 @@ export default function TestingPage() {
               <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">
                 Direct Receipt
               </th>
-              {/* <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">
-                Truckerssssssss
-              </th> */}
+              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">
+                Trucker
+              </th>
               <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">
                 Trucker Name
               </th>
@@ -489,9 +471,6 @@ export default function TestingPage() {
               </th>
               <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">
                 Quantity
-              </th>
-              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">
-                Price
               </th>
               <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">
                 Destination
@@ -510,16 +489,14 @@ export default function TestingPage() {
           <tbody className="divide-y divide-gray-200">
             {deliveries.map((delivery) => (
               <tr key={delivery.id} className="hover:bg-gray-50">
-                <td className="px-6 w-3 py-4 whitespace-nowrap">
-                  {delivery.id.slice(0, 5)}
-                </td>
+                <td className="px-6 py-4 whitespace-nowrap">{delivery.id}</td>
                 <td className="px-6 py-4 whitespace-nowrap">{delivery.date}</td>
                 <td className="px-6 py-4 whitespace-nowrap">
                   {delivery.direct_receipt}
                 </td>
-                {/* <td className="px-6 py-4 whitespace-nowrap">
-                  {delivery.trucker_id.slice(0, 5)}
-                </td> */}
+                <td className="px-6 py-4 whitespace-nowrap">
+                  {delivery.trucker_id}
+                </td>
                 <td className="px-6 py-4 whitespace-nowrap">
                   {delivery.trucker_name}
                 </td>
@@ -528,10 +505,7 @@ export default function TestingPage() {
                 </td>
                 <td className="px-6 py-4 whitespace-nowrap">{delivery.time}</td>
                 <td className="px-6 py-4 whitespace-nowrap">
-                  {delivery.quantity} cubic meter
-                </td>
-                <td className="px-6 py-4 whitespace-nowrap">
-                  ₱{delivery.price.toLocaleString()}
+                  {delivery.quantity}
                 </td>
                 <td className="px-6 py-4 whitespace-nowrap">
                   {delivery.destination}

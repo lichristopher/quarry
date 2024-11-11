@@ -1,4 +1,40 @@
+'use client';
+
+import { createClient } from '@/utils/supabase/client';
+import { useEffect, useState } from 'react';
+
+interface Profile {
+  id: string;
+  first_name: string;
+  last_name: string;
+}
+
 export default function UsersPage() {
+  const [profiles, setProfiles] = useState<Profile[]>([]);
+  const [error, setError] = useState<string | null>(null);
+
+  useEffect(() => {
+    const fetchProfiles = async () => {
+      const supabase = createClient();
+      const { data, error } = await supabase
+        .from('profiles')
+        .select('*')
+        .order('last_name');
+
+      if (error) {
+        console.error('Error fetching profiles:', error);
+        setError(error.message);
+        return;
+      }
+
+      setProfiles(data || []);
+    };
+
+    fetchProfiles();
+  }, []);
+
+  if (error) return <div className="p-6 text-red-500">Error: {error}</div>;
+
   return (
     <main className="flex-1 overflow-y-auto p-6">
       <div className="mx-auto max-w-7xl">
@@ -11,27 +47,29 @@ export default function UsersPage() {
                 <table className="w-full text-left text-sm">
                   <thead className="bg-muted/50 text-muted-foreground">
                     <tr>
-                      <th className="p-4">Name</th>
-                      <th className="p-4">Email</th>
-                      <th className="p-4">Role</th>
-                      <th className="p-4">Status</th>
+                      <th className="p-4">ID</th>
+                      <th className="p-4">First Name</th>
+                      <th className="p-4">Last Name</th>
                     </tr>
                   </thead>
                   <tbody>
-                    <tr className="border-b">
-                      <td className="p-4">John Doe</td>
-                      <td className="p-4">john@example.com</td>
-                      <td className="p-4">User</td>
-                      <td className="p-4">Active</td>
-                    </tr>
-                    <tr className="border-b">
-                      <td className="p-4">Jane Smith</td>
-                      <td className="p-4">jane@example.com</td>
-                      <td className="p-4">Admin</td>
-                      <td className="p-4">Active</td>
-                    </tr>
+                    {profiles.map((profile) => (
+                      <tr
+                        key={profile.id}
+                        className="border-b hover:bg-gray-50"
+                      >
+                        <td className="p-4">{profile.id.slice(0, 8)}</td>
+                        <td className="p-4">{profile.first_name}</td>
+                        <td className="p-4">{profile.last_name}</td>
+                      </tr>
+                    ))}
                   </tbody>
                 </table>
+                {profiles.length === 0 && (
+                  <p className="text-center text-gray-500 py-4">
+                    No users found
+                  </p>
+                )}
               </div>
             </div>
           </div>

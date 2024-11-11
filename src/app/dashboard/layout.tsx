@@ -10,15 +10,31 @@ import {
   HelpCircle,
   Wallet,
   FileText,
+  LogOut,
 } from 'lucide-react';
 import { useState } from 'react';
 import Image from 'next/image';
+import { useRouter } from 'next/navigation';
+import { createClient } from '@/utils/supabase/client';
+
 export default function DashboardLayout({
   children,
 }: {
   children: React.ReactNode;
 }) {
   const [isSidebarOpen, setIsSidebarOpen] = useState(true);
+  const router = useRouter();
+
+  const handleSignOut = async () => {
+    const supabase = createClient();
+    const { error } = await supabase.auth.signOut();
+
+    if (error) {
+      console.error('Error signing out:', error);
+    } else {
+      router.push('/login');
+    }
+  };
 
   return (
     <div className="flex h-screen overflow-hidden">
@@ -106,8 +122,8 @@ export default function DashboardLayout({
           </ul>
         </nav>
 
-        {/* Footer */}
-        <div className="border-t border-gray-700 p-4">
+        {/* Updated Footer */}
+        <div className="border-t border-gray-700 p-4 space-y-2">
           <Link
             href="/dashboard/help"
             className="flex items-center hover:bg-gray-700 px-4 py-2 rounded-lg transition-colors"
@@ -115,6 +131,13 @@ export default function DashboardLayout({
             <HelpCircle className="h-5 w-5" />
             {isSidebarOpen && <span className="ml-3">Help</span>}
           </Link>
+          <button
+            onClick={handleSignOut}
+            className="w-full flex items-center text-red-400 hover:bg-gray-700 hover:text-red-300 px-4 py-2 rounded-lg transition-colors"
+          >
+            <LogOut className="h-5 w-5" />
+            {isSidebarOpen && <span className="ml-3">Sign Out</span>}
+          </button>
         </div>
       </aside>
 

@@ -5,7 +5,7 @@ import { useEffect, useState } from 'react';
 import Link from 'next/link';
 import { Home, HelpCircle, Wallet, FileText } from 'lucide-react';
 import Image from 'next/image';
-import { useRouter } from 'next/navigation';
+import { useRouter, usePathname } from 'next/navigation';
 
 interface Delivery {
   id: string;
@@ -25,7 +25,6 @@ interface Delivery {
 interface Profile {
   id: string;
   first_name: string;
-  last_name: string;
 }
 
 interface UserSession {
@@ -41,6 +40,7 @@ export default function ClientDashboard() {
   const [isSidebarOpen] = useState(true);
   const [user, setUser] = useState<UserSession | null>(null);
   const router = useRouter();
+  const pathname = usePathname();
 
   useEffect(() => {
     const checkUser = async () => {
@@ -122,7 +122,7 @@ export default function ClientDashboard() {
 
   const getUserDisplayName = () => {
     if (user?.profile) {
-      return `${user.profile.first_name} ${user.profile.last_name}`;
+      return user.profile.first_name;
     }
     return user?.email || 'Guest';
   };
@@ -167,29 +167,15 @@ export default function ClientDashboard() {
           <ul className="space-y-2">
             <li>
               <Link
-                href="/client-dashboard"
-                className="flex items-center px-4 py-2 hover:bg-gray-700 transition-colors"
-              >
-                <Home className="h-5 w-5" />
-                {isSidebarOpen && <span className="ml-3">Home</span>}
-              </Link>
-            </li>
-            <li>
-              <Link
                 href="/client-dashboard/transactions"
-                className="flex items-center px-4 py-2 hover:bg-gray-700 transition-colors"
+                className={`flex items-center px-4 py-2 transition-colors ${
+                  pathname.includes('/client-dashboard')
+                    ? 'bg-gray-700 text-white'
+                    : 'hover:bg-gray-700'
+                }`}
               >
                 <Wallet className="h-5 w-5" />
                 {isSidebarOpen && <span className="ml-3">Transactions</span>}
-              </Link>
-            </li>
-            <li>
-              <Link
-                href="/client-dashboard/records"
-                className="flex items-center px-4 py-2 hover:bg-gray-700 transition-colors"
-              >
-                <FileText className="h-5 w-5" />
-                {isSidebarOpen && <span className="ml-3">Records</span>}
               </Link>
             </li>
           </ul>

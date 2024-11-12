@@ -3,7 +3,7 @@
 import { createClient } from '@/utils/supabase/client';
 import { useEffect, useState } from 'react';
 import { Button } from '@/components/ui/button';
-import { Plus, Loader2 } from 'lucide-react';
+import { Plus, Loader2, Trash2 } from 'lucide-react';
 import {
   Dialog,
   DialogContent,
@@ -48,7 +48,6 @@ interface Delivery {
 interface Profile {
   id: string;
   first_name: string;
-  last_name: string;
 }
 
 interface TruckerOption {
@@ -103,8 +102,8 @@ export default function TestingPage() {
       const supabase = createClient();
       const { data, error } = await supabase
         .from('profiles')
-        .select('id, first_name, last_name')
-        .order('last_name');
+        .select('id, first_name')
+        .order('first_name');
 
       if (error) {
         console.error('Error fetching truckers:', error);
@@ -113,7 +112,7 @@ export default function TestingPage() {
 
       const truckerOptions = data.map((profile: Profile) => ({
         id: profile.id,
-        fullName: `${profile.first_name} ${profile.last_name}`.trim(),
+        fullName: profile.first_name.trim(),
       }));
       setTruckers(truckerOptions);
     };
@@ -240,6 +239,52 @@ export default function TestingPage() {
 
       setDeliveries(newData || []);
 
+      const newTotal = (newData || []).reduce((sum, delivery) => {
+        if (delivery.payment_status === 'PAID') {
+          return sum + (delivery.price || 0);
+        }
+        return sum;
+      }, 0);
+      setTotalPrice(newTotal);
+    } catch (error) {
+      console.error('Error:', error);
+      setError('An unexpected error occurred');
+    }
+  };
+
+  const handleDelete = async (deliveryId: string) => {
+    if (!window.confirm('Are you sure you want to delete this record?')) {
+      return;
+    }
+
+    try {
+      const supabase = createClient();
+
+      const { error } = await supabase
+        .from('deliveries')
+        .delete()
+        .eq('id', deliveryId);
+
+      if (error) {
+        console.error('Error deleting record:', error);
+        setError(error.message);
+        return;
+      }
+
+      // Refresh the deliveries list
+      const { data: newData, error: fetchError } = await supabase
+        .from('deliveries')
+        .select('*')
+        .order('date', { ascending: false });
+
+      if (fetchError) {
+        setError(fetchError.message);
+        return;
+      }
+
+      setDeliveries(newData || []);
+
+      // Update total price
       const newTotal = (newData || []).reduce((sum, delivery) => {
         if (delivery.payment_status === 'PAID') {
           return sum + (delivery.price || 0);
@@ -582,16 +627,26 @@ export default function TestingPage() {
                   </span>
                 </td>
                 <td className="px-6 py-4 whitespace-nowrap">
-                  {delivery.payment_status === 'PENDING' && (
+                  <div className="flex gap-2">
+                    {delivery.payment_status === 'PENDING' && (
+                      <Button
+                        onClick={() => handleMarkAsPaid(delivery.id)}
+                        size="sm"
+                        variant="outline"
+                        className="bg-green-50 text-green-600 hover:bg-green-100 hover:text-green-700"
+                      >
+                        Mark as Paid
+                      </Button>
+                    )}
                     <Button
-                      onClick={() => handleMarkAsPaid(delivery.id)}
+                      onClick={() => handleDelete(delivery.id)}
                       size="sm"
                       variant="outline"
-                      className="bg-green-50 text-green-600 hover:bg-green-100 hover:text-green-700"
+                      className="bg-red-50 text-red-600 hover:bg-red-100 hover:text-red-700"
                     >
-                      Mark as Paid
+                      <Trash2 className="h-4 w-4" />
                     </Button>
-                  )}
+                  </div>
                 </td>
               </tr>
             ))}

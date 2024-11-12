@@ -48,7 +48,6 @@ interface Delivery {
 interface Profile {
   id: string;
   first_name: string;
-  last_name: string;
 }
 
 interface TruckerOption {
@@ -100,8 +99,8 @@ export default function TestingPage() {
       const supabase = createClient();
       const { data, error } = await supabase
         .from('profiles')
-        .select('id, first_name, last_name')
-        .order('last_name');
+        .select('id, first_name')
+        .order('first_name');
 
       if (error) {
         console.error('Error fetching truckers:', error);
@@ -110,7 +109,7 @@ export default function TestingPage() {
 
       const truckerOptions = data.map((profile: Profile) => ({
         id: profile.id,
-        fullName: `${profile.first_name} ${profile.last_name}`.trim(),
+        fullName: profile.first_name.trim(),
       }));
       setTruckers(truckerOptions);
     };

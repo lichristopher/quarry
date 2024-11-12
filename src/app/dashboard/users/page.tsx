@@ -6,7 +6,6 @@ import { useEffect, useState } from 'react';
 interface Profile {
   id: string;
   first_name: string;
-  last_name: string;
 }
 
 export default function UsersPage() {
@@ -16,10 +15,7 @@ export default function UsersPage() {
   useEffect(() => {
     const fetchProfiles = async () => {
       const supabase = createClient();
-      const { data, error } = await supabase
-        .from('profiles')
-        .select('*')
-        .order('last_name');
+      const { data, error } = await supabase.from('profiles').select('*');
 
       if (error) {
         console.error('Error fetching profiles:', error);
@@ -49,7 +45,6 @@ export default function UsersPage() {
                     <tr>
                       <th className="p-4">ID</th>
                       <th className="p-4">First Name</th>
-                      <th className="p-4">Last Name</th>
                     </tr>
                   </thead>
                   <tbody>
@@ -60,7 +55,6 @@ export default function UsersPage() {
                       >
                         <td className="p-4">{profile.id.slice(0, 8)}</td>
                         <td className="p-4">{profile.first_name}</td>
-                        <td className="p-4">{profile.last_name}</td>
                       </tr>
                     ))}
                   </tbody>

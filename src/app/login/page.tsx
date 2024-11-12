@@ -1,106 +1,191 @@
-import { createClient } from '@/utils/supabase/server';
+'use client';
+
+import { createClient } from '@/utils/supabase/client';
 import { redirect } from 'next/navigation';
 import { login } from './actions';
-import Link from 'next/link';
+import { useState, useEffect } from 'react';
+import { Button } from '@/components/ui/button';
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardFooter,
+  CardHeader,
+  CardTitle,
+} from '@/components/ui/card';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { LockIcon, UserIcon } from 'lucide-react';
 import Image from 'next/image';
 
-export default async function LoginPage() {
-  const supabase = await createClient();
-  const {
-    data: { user },
-    error,
-  } = await supabase.auth.getUser();
+export default function LoginPage() {
+  const [isLoading, setIsLoading] = useState(false);
+  const [error, setError] = useState('');
 
-  if (!error && user) {
-    redirect('/dashboard');
-  }
+  // Check authentication status on component mount
+  useEffect(() => {
+    const checkAuth = async () => {
+      const supabase = await createClient();
+      const {
+        data: { user },
+        error: authError,
+      } = await supabase.auth.getUser();
+
+      if (!authError && user) {
+        // Query the profiles table to check admin status
+        const { data: profiles, error: profileError } = await supabase
+          .from('profiles')
+          .select('is_admin')
+          .eq('id', user.id)
+          .single();
+
+        if (!profileError && profiles) {
+          // Redirect based on admin status
+          if (profiles.is_admin) {
+            redirect('/dashboard');
+          } else {
+            redirect('/client-dashboard');
+          }
+        }
+      }
+    };
+
+    checkAuth();
+  }, []);
+
+  const handleSubmit = async (event: React.FormEvent<HTMLFormElement>) => {
+    event.preventDefault();
+    setIsLoading(true);
+    setError('');
+
+    const formData = new FormData(event.currentTarget);
+
+    try {
+      await login(formData);
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'An error occurred');
+    } finally {
+      setIsLoading(false);
+    }
+  };
 
   return (
-    <div className="min-h-screen bg-[#1a237e] flex items-center justify-center p-4">
-      <div className="bg-white rounded-lg shadow-xl w-full max-w-[1000px] flex overflow-hidden">
-        {/* Login Form Section */}
-        <div className="w-1/2 p-8">
-          <div className="flex items-center gap-2 mb-6">
-            <div className="w-8 h-8 bg-blue-600 rounded-lg flex items-center justify-center">
-              <span className="text-white font-bold">D</span>
-            </div>
-            <h1 className="text-xl font-semibold">Login</h1>
-          </div>
-
-          <h2 className="text-2xl font-bold mb-2">Log in to your Account</h2>
-          <p className="text-gray-500 mb-8">
-            Welcome back! Select method to log in.
-          </p>
-
-          <div className="flex items-center gap-2 my-6">
-            <div className="h-px bg-gray-200 flex-1"></div>
-            <span className="text-gray-500 text-sm">
-              OR CONTINUE WITH EMAIL
-            </span>
-            <div className="h-px bg-gray-200 flex-1"></div>
-          </div>
-
-          <form className="space-y-4">
-            <div>
-              <input
-                id="email"
-                name="email"
-                type="email"
-                required
-                className="w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none"
-                placeholder="admin@dotwork.com"
-              />
-            </div>
-            <div className="relative">
-              <input
-                id="password"
-                name="password"
-                type="password"
-                required
-                className="w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none"
-                placeholder="••••••••"
-              />
-              <button
-                type="button"
-                className="absolute right-3 top-1/2 -translate-y-1/2"
-              ></button>
-            </div>
-            <div className="flex items-center justify-between">
-              <label className="flex items-center gap-2">
-                <input type="checkbox" className="rounded border-gray-300" />
-                <span className="text-sm">Remember me</span>
-              </label>
-              <Link
-                href="/forgot-password"
-                className="text-sm text-blue-600 hover:underline"
-              >
-                Forgot Password?
-              </Link>
-            </div>
-            <button
-              formAction={login}
-              className="w-full bg-blue-600 text-white rounded-lg py-2 hover:bg-blue-700 transition-colors"
-            >
-              Log in
-            </button>
-          </form>
-
-          <p className="text-center mt-6 text-sm text-gray-600">
-            Don't have an account?{' '}
-            <Link href="/signup" className="text-blue-600 hover:underline">
-              Create an account
-            </Link>
-          </p>
-        </div>
-
-        {/* Image Section */}
-        <div className="w-1/2">
-          <img
-            src="/quarry.png"
-            alt="quarry"
-            className="w-full h-full object-cover"
-          />
-        </div>
+    <div className="flex min-h-screen">
+      <div className="flex-1 hidden lg:block">
+        <Image
+          src="/quarry.png"
+          alt="Login background"
+          width={1080}
+          height={1080}
+          className="object-cover w-full h-full"
+          priority
+        />
+      </div>
+      <div className="flex-1 flex items-center justify-center p-8">
+        <Card className="w-full max-w-[400px]">
+          <CardHeader>
+            <CardTitle>Dashboard Login</CardTitle>
+            <CardDescription>
+              Login to your admin or client dashboard.
+            </CardDescription>
+          </CardHeader>
+          <CardContent>
+            <Tabs defaultValue="client" className="w-full">
+              <TabsList className="grid w-full grid-cols-2">
+                <TabsTrigger value="client">Client</TabsTrigger>
+                <TabsTrigger value="admin">Admin</TabsTrigger>
+              </TabsList>
+              <TabsContent value="client">
+                <form id="clientForm" action={login}>
+                  <div className="grid w-full items-center gap-4">
+                    <div className="flex flex-col space-y-1.5">
+                      <Label htmlFor="clientEmail">Email</Label>
+                      <Input
+                        id="clientEmail"
+                        name="email"
+                        type="email"
+                        placeholder="john@example.com"
+                        required
+                      />
+                    </div>
+                    <div className="flex flex-col space-y-1.5">
+                      <Label htmlFor="clientPassword">Password</Label>
+                      <Input
+                        id="clientPassword"
+                        name="password"
+                        type="password"
+                        required
+                      />
+                    </div>
+                  </div>
+                  <CardFooter className="flex justify-between mt-4 px-0">
+                    <Button
+                      type="submit"
+                      className="w-full"
+                      disabled={isLoading}
+                    >
+                      {isLoading ? (
+                        <>
+                          <UserIcon className="mr-2 h-4 w-4 animate-spin" />
+                          Logging in...
+                        </>
+                      ) : (
+                        'Login as Client'
+                      )}
+                    </Button>
+                  </CardFooter>
+                </form>
+              </TabsContent>
+              <TabsContent value="admin">
+                <form id="adminForm" action={login}>
+                  <div className="grid w-full items-center gap-4">
+                    <div className="flex flex-col space-y-1.5">
+                      <Label htmlFor="adminEmail">Email</Label>
+                      <Input
+                        id="adminEmail"
+                        name="email"
+                        type="email"
+                        placeholder="admin@example.com"
+                        required
+                      />
+                    </div>
+                    <div className="flex flex-col space-y-1.5">
+                      <Label htmlFor="adminPassword">Password</Label>
+                      <Input
+                        id="adminPassword"
+                        name="password"
+                        type="password"
+                        required
+                      />
+                    </div>
+                  </div>
+                  <CardFooter className="flex justify-between mt-4 px-0">
+                    <Button
+                      type="submit"
+                      className="w-full"
+                      disabled={isLoading}
+                    >
+                      {isLoading ? (
+                        <>
+                          <LockIcon className="mr-2 h-4 w-4 animate-spin" />
+                          Logging in...
+                        </>
+                      ) : (
+                        'Login as Admin'
+                      )}
+                    </Button>
+                  </CardFooter>
+                </form>
+              </TabsContent>
+            </Tabs>
+          </CardContent>
+          {error && (
+            <CardFooter>
+              <p className="text-sm text-red-500">{error}</p>
+            </CardFooter>
+          )}
+        </Card>
       </div>
     </div>
   );

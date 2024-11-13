@@ -93,9 +93,21 @@ export default function TestingPage() {
       price: 0,
       destination: '',
       payment_method: 'CASH',
-      payment_status: 'PENDING',
+      payment_status: 'PAID',
     },
   });
+
+  useEffect(() => {
+    const subscription = form.watch((value, { name }) => {
+      if (name === 'payment_method') {
+        const paymentStatus =
+          value.payment_method === 'CASH' ? 'PAID' : 'PENDING';
+        form.setValue('payment_status', paymentStatus);
+      }
+    });
+
+    return () => subscription.unsubscribe();
+  }, [form]);
 
   useEffect(() => {
     const fetchTruckers = async () => {
@@ -166,8 +178,11 @@ export default function TestingPage() {
 
       console.log('Form Data:', data);
 
+      const paymentStatus = data.payment_method === 'CASH' ? 'PAID' : 'PENDING';
+
       const recordData = {
         ...data,
+        payment_status: paymentStatus,
         date: new Date().toISOString().split('T')[0],
         time: new Date().toLocaleTimeString(),
       };

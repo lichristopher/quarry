@@ -15,11 +15,10 @@ import {
 } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { LockIcon, UserIcon } from 'lucide-react';
+import { UserIcon } from 'lucide-react';
 import Image from 'next/image';
 
-export default function LoginPage() {
+export default function MemberLoginPage() {
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState('');
 
@@ -69,24 +68,24 @@ export default function LoginPage() {
       <div className="flex-1 flex items-center justify-center p-8">
         <Card className="w-full max-w-[400px]">
           <CardHeader>
-            <CardTitle>Admin Login</CardTitle>
-            <CardDescription>Login to your admin dashboard.</CardDescription>
+            <CardTitle>Member Login</CardTitle>
+            <CardDescription>Login to your member dashboard.</CardDescription>
           </CardHeader>
           <CardContent>
             <form action={login}>
               <div className="grid w-full items-center gap-4">
                 <div className="flex flex-col space-y-1.5">
-                  <Label htmlFor="email">Admin Email</Label>
+                  <Label htmlFor="email">Member Email</Label>
                   <Input
                     id="email"
                     name="email"
                     type="email"
-                    placeholder="admin@example.com"
+                    placeholder="member@example.com"
                     required
                   />
                 </div>
                 <div className="flex flex-col space-y-1.5">
-                  <Label htmlFor="password">Admin Password</Label>
+                  <Label htmlFor="password">Member Password</Label>
                   <Input
                     id="password"
                     name="password"
@@ -103,7 +102,7 @@ export default function LoginPage() {
                       Logging in...
                     </>
                   ) : (
-                    'Login as Admin'
+                    'Login as Member'
                   )}
                 </Button>
               </CardFooter>

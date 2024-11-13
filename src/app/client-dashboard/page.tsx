@@ -25,6 +25,7 @@ interface Delivery {
 interface Profile {
   id: string;
   first_name: string;
+  last_name: string;
 }
 
 interface UserSession {
@@ -122,7 +123,7 @@ export default function ClientDashboard() {
 
   const getUserDisplayName = () => {
     if (user?.profile) {
-      return user.profile.first_name;
+      return `${user.profile.first_name} ${user.profile.last_name}`;
     }
     return user?.email || 'Guest';
   };
@@ -169,7 +170,7 @@ export default function ClientDashboard() {
               <Link
                 href="/client-dashboard/transactions"
                 className={`flex items-center px-4 py-2 transition-colors ${
-                  pathname.includes('/client-dashboard')
+                  pathname.includes('/client-dashboard/transactions')
                     ? 'bg-gray-700 text-white'
                     : 'hover:bg-gray-700'
                 }`}
